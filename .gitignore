@@ -1,0 +1,11 @@
+# Build files
+TwitchTTS/bin
+TwitchTTS/obj
+*.dll
+*.exe
+
+# Resources
+*.wav
+
+# Debug files
+*.pdb
