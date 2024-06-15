@@ -105,11 +105,9 @@ namespace TwitchTTS
 					Narrate(prompt, chatMessage.Username);
 					prompt.AppendAudio("./messagebegin.wav");
 					string message = replacementPhrases.Aggregate(chatMessage.Message, (message, pair) => message.Replace(pair.Key, pair.Value));
-					if (Speak(prompt, message, chatMessage.Username))
-					{
-						prompt.AppendAudio("./messageend.wav");
-						speech.SpeakAsync(prompt);
-					}
+					Speak(prompt, message, chatMessage.Username);
+					prompt.AppendAudio("./messageend.wav");
+					speech.SpeakAsync(prompt);
 				}
 			}
 		}
@@ -153,48 +151,51 @@ namespace TwitchTTS
 			prompt.EndVoice();
 		}
 
-		public bool Speak(PromptBuilder prompt, string message, string? username = null)
+		public void Speak(PromptBuilder prompt, string message, string? username = null)
 		{
-			VoiceInfo? voice = null;
-			IEnumerable<string> tokens = message.Split(' ');
-			if (tokens.FirstOrDefault("").StartsWith("!voice")
-				&& int.TryParse(tokens.First().Substring(6), out int index))
-			{
-				tokens = tokens.Skip(1);
-				if (username != null)
-					voice = userVoices[username] = voices[index % voices.Count];
-				else
-					voice = narrator = voices[index % voices.Count];
-			}
-			else
-				voice = GetUserVoice(username) ?? narrator;
+			VoiceInfo? voice;
+			string[] messages = message.Split("!voice");
+			bool containsVoiceCommand = messages.Length > 1;
 
-			prompt.StartVoice(voice ?? narrator);
-			int pushedStyles = 0;
-			foreach (string token in tokens)
+			foreach (string voiceMessage in messages)
 			{
-				switch (token)
+				IEnumerable<string> tokens = voiceMessage.Trim().Split(' ');
+				if (containsVoiceCommand && int.TryParse(tokens.First(), out int index))
 				{
-					case "!fast": prompt.StartStyle(new PromptStyle(PromptRate.Fast)); pushedStyles++; break;
-					case "!xfast": prompt.StartStyle(new PromptStyle(PromptRate.ExtraFast)); pushedStyles++; break;
-					case "!slow": prompt.StartStyle(new PromptStyle(PromptRate.Slow)); pushedStyles++; break;
-					case "!xslow": prompt.StartStyle(new PromptStyle(PromptRate.ExtraSlow)); pushedStyles++; break;
-					case "!strong": prompt.StartStyle(new PromptStyle(PromptEmphasis.Strong)); pushedStyles++; break;
-					case "!moderate": prompt.StartStyle(new PromptStyle(PromptEmphasis.Moderate)); pushedStyles++; break;
-					case "!reduced": prompt.StartStyle(new PromptStyle(PromptEmphasis.Reduced)); pushedStyles++; break;
-					case "!soft": prompt.StartStyle(new PromptStyle(PromptVolume.Soft)); pushedStyles++; break;
-					case "!loud": prompt.StartStyle(new PromptStyle(PromptVolume.Loud)); pushedStyles++; break;
-					case "!s": if (pushedStyles > 0) { prompt.EndStyle(); pushedStyles--; } break;
-					default: prompt.AppendText(token + " "); break;
+					tokens = tokens.Skip(tokens.First().Length == 6 ? 2 : 1);
+					if (username != null)
+						voice = userVoices[username] = voices[index % voices.Count];
+					else
+						voice = narrator = voices[index % voices.Count];
 				}
+				else
+					voice = GetUserVoice(username!) ?? narrator;
+
+				prompt.StartVoice(voice ?? narrator);
+				int pushedStyles = 0;
+				foreach (string token in tokens)
+				{
+					switch (token)
+					{
+						case "!fast": prompt.StartStyle(new PromptStyle(PromptRate.Fast)); pushedStyles++; break;
+						case "!xfast": prompt.StartStyle(new PromptStyle(PromptRate.ExtraFast)); pushedStyles++; break;
+						case "!slow": prompt.StartStyle(new PromptStyle(PromptRate.Slow)); pushedStyles++; break;
+						case "!xslow": prompt.StartStyle(new PromptStyle(PromptRate.ExtraSlow)); pushedStyles++; break;
+						case "!strong": prompt.StartStyle(new PromptStyle(PromptEmphasis.Strong)); pushedStyles++; break;
+						case "!moderate": prompt.StartStyle(new PromptStyle(PromptEmphasis.Moderate)); pushedStyles++; break;
+						case "!reduced": prompt.StartStyle(new PromptStyle(PromptEmphasis.Reduced)); pushedStyles++; break;
+						case "!soft": prompt.StartStyle(new PromptStyle(PromptVolume.Soft)); pushedStyles++; break;
+						case "!loud": prompt.StartStyle(new PromptStyle(PromptVolume.Loud)); pushedStyles++; break;
+						case "!s": if (pushedStyles > 0) { prompt.EndStyle(); pushedStyles--; } break;
+						default: prompt.AppendText(token + " "); break;
+					}
+				}
+
+				while (pushedStyles-- > 0)
+					prompt.EndStyle();
+
+				prompt.EndVoice();
 			}
-
-			while (pushedStyles-- > 0)
-				prompt.EndStyle();
-
-			prompt.EndVoice();
-
-			return tokens.Any();
 		}
 
 		public void Speak(string message)
