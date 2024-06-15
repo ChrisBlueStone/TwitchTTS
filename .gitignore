@@ -6,6 +6,7 @@ TwitchTTS/obj
 
 # Resources
 *.wav
+log.txt
 
 # Debug files
 *.pdb
