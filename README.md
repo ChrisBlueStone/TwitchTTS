@@ -1,7 +1,8 @@
 # TwitchTTS
  A simple TTS Twitch bot that lets viewers control their voices
 
-## Usage
+## Overview
+### Usage
 When the program starts, a terminal will open where the user can enter commands for testing voices, controlling which voices are enable, and controlling which viewers' messages are read.
 You may type `help` to get a list of commands or `help` followed by a specific command to get more details for it.
 Typing `exit` will close the program.
@@ -28,7 +29,7 @@ To check what voice a user has been assigned, use the `check` command. Example: 
 
 To reassign a voice to a user, use the `assign` command. Example: `assign twitchfan42 3`
 
-## Style modifiers
+### Style modifiers
 When a message is read, certain keywords may be used in the message to alter how it's spoken. These keywords begin with an exclamation point followed by the keyword without any spaces between them.
 
 - `!fast` makes the message faster than normal.
@@ -41,7 +42,7 @@ When a message is read, certain keywords may be used in the message to alter how
 - `!soft` makes the message with at a softer volume.
 - `!loud` makes the message with at a louder volume.
 
-## Sounds
+### Sounds
 The program will play certain sounds to help signify where a user's message starts and ends. This is to mitigate users attempting to impersonating others.
 
 The following .wav files will be used if they exist next to the program executable file.
@@ -49,3 +50,7 @@ The following .wav files will be used if they exist next to the program executab
 - `start.wav` - Plays when the program finishes connecting to Twitch and is ready to receive commands. It also plays after the message queue is cleared when the `clear` command is used.
 - `messagebegin.wav` - Plays before a message is read after announcing the username of the viewer.
 - `messageend.wav` - Plays when a viewers message concludes.
+
+## Building the code
+To build, run `dotnet build`
+To publish, run `dotnet publish -c Release`
